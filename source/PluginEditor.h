@@ -1,15 +1,17 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "ImageInteractor.h"
 #include "BinaryData.h"
 #include "melatonin_inspector/melatonin_inspector.h"
 
 //==============================================================================
-class PluginEditor : public juce::AudioProcessorEditor
+class PluginEditor : public juce::AudioProcessorEditor, public juce::Timer
 {
 public:
     explicit PluginEditor (PluginProcessor&);
-    ~PluginEditor() override;
+
+    void timerCallback() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -21,5 +23,8 @@ private:
     PluginProcessor& processorRef;
     std::unique_ptr<melatonin::Inspector> inspector;
     juce::TextButton inspectButton { "Inspect the UI" };
+
+    ImageInteractor vuMeterL;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

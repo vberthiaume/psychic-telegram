@@ -125,8 +125,19 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ignoreUnused (midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
+    const auto totalNumInputChannels = getTotalNumInputChannels();
+    const auto totalNumOutputChannels = getTotalNumOutputChannels();
+    const auto numSamples = buffer.getNumSamples();
+
+    // Need to send the RMS below to the animation components for VU meters.
+    // Measuring RMS over the buffer is simple but depends on the buffer size.
+    curRMSL = buffer.getRMSLevel (0, 0, numSamples);
+    if (totalNumInputChannels > 1)
+        curRMSR = buffer.getRMSLevel (1, 0, numSamples);
+    else
+        curRMSR = curRMSL;
+
+
 
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
