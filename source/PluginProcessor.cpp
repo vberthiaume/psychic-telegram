@@ -120,11 +120,11 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
-                                              juce::MidiBuffer& midiMessages)
+                                    juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused (midiMessages);
-
     juce::ScopedNoDenormals noDenormals;
+
     const auto totalNumInputChannels = getTotalNumInputChannels();
     const auto totalNumOutputChannels = getTotalNumOutputChannels();
     const auto numSamples = buffer.getNumSamples();
@@ -136,7 +136,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         curRMSR = buffer.getRMSLevel (1, 0, numSamples);
     else
         curRMSR = curRMSL;
-
 
 
     // In case we have more outputs than inputs, this code clears any output
