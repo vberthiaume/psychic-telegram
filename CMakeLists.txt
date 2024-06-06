@@ -84,11 +84,13 @@ juce_add_plugin("${PROJECT_NAME}"
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-# C++20, please
-# Use cxx_std_23 for C++23 (as of CMake v 3.20)
-target_compile_features(SharedCode INTERFACE cxx_std_23)
-add_compile_definitions(_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS=1) #This silences a bunch of warnings shown by MSVC when building juce with c++23
-
+#windoze can use c++23 but not mac
+if (MSVC)
+    target_compile_features(SharedCode INTERFACE cxx_std_23)
+    add_compile_definitions(_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS=1) #This silences a bunch of warnings shown by MSVC when building juce with c++23
+else()
+    target_compile_features(SharedCode INTERFACE cxx_std_20)
+endif()
 # Manually list all .h and .cpp files for the plugin
 # If you are like me, you'll use globs for your sanity.
 # Just ensure you employ CONFIGURE_DEPENDS so the build system picks up changes
