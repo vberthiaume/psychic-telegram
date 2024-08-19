@@ -13,13 +13,12 @@ concurrency:
 env:
   BUILD_TYPE: Release
   BUILD_DIR: Builds
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DISPLAY: :0 # linux pluginval needs this
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   SCCACHE_GHA_ENABLED: true
   IPP_DIR: C:\Program Files (x86)\Intel\oneAPI\ipp\latest\lib\cmake\ipp
 
-  defaults:
+defaults:
   run:
     shell: bash
 
@@ -27,8 +26,8 @@ env:
 # all steps run in series
 jobs:
   build_and_test:
-        # don't double run on PRs
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
+    # don't double run on PRs
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -125,9 +124,9 @@ jobs:
         working-directory: ${{ env.BUILD_DIR }}
         run: ./Tests
 
-        - name: Run Benchmarks
-          working-directory: ${{ env.BUILD_DIR }}
-          run: ./Benchmarks
+      - name: Run Benchmarks
+        working-directory: ${{ env.BUILD_DIR }}
+        run: ./Benchmarks
 
       - name: Read in .env from CMake # see GitHubENV.cmake
         run: |
