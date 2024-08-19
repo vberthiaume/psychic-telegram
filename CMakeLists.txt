@@ -84,10 +84,13 @@ juce_add_plugin("${PROJECT_NAME}"
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-# C++20, please
-# Use cxx_std_23 for C++23 (as of CMake v 3.20)
-target_compile_features(SharedCode INTERFACE cxx_std_20)
-
+#windoze can use c++23 but not mac
+if (MSVC)
+    target_compile_features(SharedCode INTERFACE cxx_std_23)
+    add_compile_definitions(_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS=1) #This silences a bunch of warnings shown by MSVC when building juce with c++23
+else()
+    target_compile_features(SharedCode INTERFACE cxx_std_20)
+endif()
 # Manually list all .h and .cpp files for the plugin
 # If you are like me, you'll use globs for your sanity.
 # Just ensure you employ CONFIGURE_DEPENDS so the build system picks up changes
@@ -112,14 +115,14 @@ target_compile_definitions(SharedCode
     JUCE_VST3_CAN_REPLACE_VST2=0
 
     # Uncomment if you are paying for a an Indie/Pro license or releasing under GPLv3
-    # JUCE_DISPLAY_SPLASH_SCREEN=0
+    JUCE_DISPLAY_SPLASH_SCREEN=0
 
     # lets the app known if we're Debug or Release
     CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     VERSION="${CURRENT_VERSION}"
 
     # JucePlugin_Name is for some reason doesn't use the nicer PRODUCT_NAME
-    PRODUCT_NAME_WITHOUT_VERSION="Pamplejuce"
+    PRODUCT_NAME_WITHOUT_VERSION="PsychicTelegram"
 )
 
 # Link to any other modules you added (with juce_add_module) here!
