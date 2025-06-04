@@ -1,13 +1,17 @@
-# 3.24.1 is bundled in Visual Studio 2022 v17.4
-# 3.24.1 is also bundled in CLion as of 2023
-cmake_minimum_required(VERSION 3.24.1)
+cmake_minimum_required(VERSION 3.25)
 
 # This tells cmake we have goodies in the /cmake folder
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include (PamplejuceVersion)
 
+# Modern concise way to add dependencies to your project
+include (CPM)
+
 # Configures universal binaries and decides which version of macOS to support
 include(PamplejuceMacOS)
+
+# Couple tweaks that IMO should be JUCE defaults
+include(JUCEDefaults)
 
 # Change me!
 # This is the internal name of the project and the name of JUCE's shared code target
@@ -36,14 +40,14 @@ set(FORMATS Standalone AU VST3 AUv3)
 # For simplicity, the name of the CMake project is also the name of the target
 project(${PROJECT_NAME} VERSION ${CURRENT_VERSION})
 
-# Couple tweaks that IMO should be JUCE defaults
-include(JUCEDefaults)
-
 # JUCE is setup as a submodule in the /JUCE folder
 # Locally, you must run `git submodule update --init --recursive` once
 # and later `git submodule update --remote --merge` to keep it up to date
 # On Github Actions, this is done as a part of actions/checkout
 add_subdirectory(JUCE)
+
+# Add CLAP format
+add_subdirectory(modules/clap-juce-extensions EXCLUDE_FROM_ALL)
 
 # Add any other modules you want modules here, before the juce_add_plugin call
 # juce_add_module(modules/my_module)
@@ -60,7 +64,7 @@ juce_add_plugin("${PROJECT_NAME}"
     COMPANY_NAME "${COMPANY_NAME}"
     BUNDLE_ID "${BUNDLE_ID}"
 
-    # On MacOS, plugin is copied to ~/Users/yourname/Library/Audio/Plug-Ins/
+    # On MacOS, plugin is copied to /Users/yourname/Library/Audio/Plug-Ins/
     COPY_PLUGIN_AFTER_BUILD TRUE
 
     # Change me!
@@ -85,12 +89,21 @@ juce_add_plugin("${PROJECT_NAME}"
 add_library(SharedCode INTERFACE)
 
 #windoze can use c++23 but not mac
-if (MSVC)
-    target_compile_features(SharedCode INTERFACE cxx_std_23)
-    add_compile_definitions(_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS=1) #This silences a bunch of warnings shown by MSVC when building juce with c++23
-else()
-    target_compile_features(SharedCode INTERFACE cxx_std_20)
-endif()
+# TODO VB: this is probably done by the include(SharedCodeDefaults) line below??
+# if (MSVC)
+#     target_compile_features(SharedCode INTERFACE cxx_std_23)
+#     add_compile_definitions(_SILENCE_ALL_CXX23_DEPRECATION_WARNINGS=1) #This silences a bunch of warnings shown by MSVC when building juce with c++23
+# else()
+#     target_compile_features(SharedCode INTERFACE cxx_std_20)
+# endif()
+
+clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"
+    CLAP_ID "${BUNDLE_ID}"
+    CLAP_FEATURES audio-effect)
+
+# Enable fast math, C++20 and a few other target defaults
+include(SharedCodeDefaults)
+
 # Manually list all .h and .cpp files for the plugin
 # If you are like me, you'll use globs for your sanity.
 # Just ensure you employ CONFIGURE_DEPENDS so the build system picks up changes
@@ -152,8 +165,8 @@ include(PamplejuceIPP)
 # Everything related to the tests target
 include(Tests)
 
-# A separate target keeps the Tests target fast!
+# A separate target for Benchmarks (keeps the Tests target fast)
 include(Benchmarks)
 
-# Pass some config to GA (like our PRODUCT_NAME)
+# Output some config for CI (like our PRODUCT_NAME)
 include(GitHubENV)
